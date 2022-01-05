@@ -1,42 +1,77 @@
 import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Button, TextInput } from "react-native";
 import Headers from "../Components/Headers";
 import Colors from "../Constants/Colors";
 import NavigationStrings from "../Constants/NavigationStrings";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Signin = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
   const goToSignup = () => {
     navigation.navigate(NavigationStrings.SIGNUP);
   };
 
+  const storeData = async (value) => {
+    try {
+      await AsyncStorage.setItem("@userData", value);
+    } catch (e) {
+      // saving error
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const signinBody = {
+      email: email.toLowerCase().trim(),
+      password: password.trim(),
+    };
+    console.log(signinBody);
+    fetch("http://192.168.18.38:3000/auth/signin", {
+      method: "POST",
+      headers: { "content-Type": " application/json" },
+      body: JSON.stringify(signinBody),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        storeData(res);
+        console.log(res);
+        navigation.navigate(NavigationStrings.HOME);
+      });
+  };
+
   return (
     <View>
       <Headers title="Signin" />
       <View style={styles.inputContainer}>
-        <Text>Email</Text>
+        <Text style={{ fontSize: 20 }}>Email</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Email"
             style={styles.input}
-            //   onChangeText={goalInputHandler}
-            //   value={textEntered}
+            value={email}
+            onChangeText={(email) => setEmail(email)}
           ></TextInput>
         </View>
-        <Text>Password</Text>
+        <Text style={{ fontSize: 20 }}>Password</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Password"
             style={styles.input}
-            //   onChangeText={goalInputHandler}
-            //   value={textEntered}
+            value={password}
+            onChangeText={(password) => setPassword(password)}
           ></TextInput>
         </View>
 
         <View style={styles.inputFielsS}>
-          <Button title="Signin" color={Colors.primary} />
+          <Button
+            title="Signin"
+            color={Colors.primary}
+            onPress={handleSubmit}
+          />
         </View>
         <View style={styles.already}>
           <Text style={styles.inputFiels}>Don't have an account ? </Text>

@@ -1,16 +1,97 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { View, Text, StyleSheet, Button, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import Headers from "../Components/Headers";
 import NavigationStrings from "../Constants/NavigationStrings";
 import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
+import useFetch from "../Components/useFetch";
 
 const Transfer = () => {
+  const [payFromIndex, setPayFromIndex] = useState(0);
+  const [payToIndex, setPayToIndex] = useState(0);
+  console.log(payFromIndex);
+  console.log(payToIndex);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const [fromID, setFromID] = useState("");
+  const [toID, setToID] = useState("");
+
+  const [fromCash, setFromCash] = useState("");
+  const [toCash, setToCash] = useState("");
+
+  const [cash1, setCash1] = useState("");
+
+  // console.log("accountIndex : ", selectedAccountIndex);
+  // console.log("account : ", account);
+  // console.log("categoryIndex : ", selectedCategoryIndex);
+  // console.log("category : ", category);
+  // console.log("accountID : ", accountID);
+  // console.log("account cash : ", accountCash);
+
+  const [accounts, setAccounts] = useState([]);
+  const { data: allAccounts } = useFetch("http://192.168.18.38:3000/account");
+
+  useEffect(() => {
+    setAccounts(allAccounts);
+    console.log(allAccounts);
+  }, [allAccounts, accounts]);
+
   const navigation = useNavigation();
+
+  const goToAddAccount = () => {
+    navigation.navigate(NavigationStrings.ADDACCOUNT);
+  };
 
   const goToHome = () => {
     navigation.navigate(NavigationStrings.HOME);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const fromCash1 = parseInt(fromCash) - parseInt(cash1);
+    console.log(fromCash1);
+    const toCash1 = parseInt(toCash) + parseInt(cash1);
+    // console.log("updated cash :: ", cash);
+    console.log(toCash1);
+    const addAccount = { cash: cash1, from, to, transaction: "Transfer" };
+
+    const updateFromAccount = { cash: fromCash1 };
+    const updateToAccount = { cash: toCash1 };
+
+    fetch("http://192.168.18.38:3000/account/" + fromID, {
+      method: "PATCH",
+      headers: { "content-Type": " application/json" },
+      body: JSON.stringify(updateFromAccount),
+    }).then(() => {
+      console.log("data edit successful");
+    });
+
+    fetch("http://192.168.18.38:3000/account/" + toID, {
+      method: "PATCH",
+      headers: { "content-Type": " application/json" },
+      body: JSON.stringify(updateToAccount),
+    }).then(() => {
+      console.log("data edit successful");
+    });
+
+    fetch("http://192.168.18.38:3000/expense", {
+      method: "POST",
+      headers: { "content-Type": " application/json" },
+      body: JSON.stringify(addAccount),
+    }).then(() => {
+      console.log("data added successful");
+      navigation.navigate(NavigationStrings.HOME);
+    });
   };
 
   return (
@@ -18,6 +99,8 @@ const Transfer = () => {
       <View>
         <View style={styles.inputFiels}>
           <TextInput
+            onChangeText={(cash1) => setCash1(cash1)}
+            value={cash1}
             placeholder="PKR 0"
             style={styles.input}
             blurOnSubmit
@@ -32,39 +115,73 @@ const Transfer = () => {
           <Text style={styles.head}>Pay From</Text>
         </View>
         <View style={styles.list}>
-          <Card style={styles.cardMargin}>
-            <Text>Cash</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>Meezan Bank</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>SadaPay</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>JaazCash</Text>
-          </Card>
+          {accounts &&
+            accounts.map((account, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setPayFromIndex(index),
+                    setFrom(account.accountName),
+                    setFromID(account._id),
+                    setFromCash(account.cash);
+                }}
+              >
+                <Card
+                  style={
+                    payFromIndex === index
+                      ? styles.cardMargin1
+                      : styles.cardMargin
+                  }
+                >
+                  <Text
+                    style={
+                      payFromIndex === index ? styles.color : styles.color1
+                    }
+                  >
+                    {account.accountName}
+                  </Text>
+                </Card>
+              </TouchableOpacity>
+            ))}
         </View>
         <View style={{ marginLeft: 30 }}>
           <Text style={styles.head1}>Pay To</Text>
         </View>
         <View style={styles.list}>
-          <Card style={styles.cardMargin}>
-            <Text>Cash</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>Meezan Bank</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>SadaPay</Text>
-          </Card>
-          <Card style={styles.cardMargin}>
-            <Text>JaazCash</Text>
-          </Card>
+          {accounts &&
+            accounts.map((account, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setPayToIndex(index),
+                    setTo(account.accountName),
+                    setToID(account._id),
+                    setToCash(account.cash);
+                }}
+              >
+                <Card
+                  style={
+                    payToIndex === index
+                      ? styles.cardMargin1
+                      : styles.cardMargin
+                  }
+                >
+                  <Text
+                    style={payToIndex === index ? styles.color : styles.color1}
+                  >
+                    {account.accountName}
+                  </Text>
+                </Card>
+              </TouchableOpacity>
+            ))}
         </View>
 
         <View style={styles.inputFiels1}>
-          <Button title="FINISH" color={Colors.primary} onPress={goToHome} />
+          <Button
+            title="FINISH"
+            color={Colors.primary}
+            onPress={handleSubmit}
+          />
         </View>
       </View>
     </View>
@@ -123,6 +240,18 @@ const styles = StyleSheet.create({
   cardMargin: {
     margin: 5,
     padding: 15,
+  },
+  cardMargin1: {
+    backgroundColor: Colors.primary,
+    color: "white",
+    borderColor: Colors.primary,
+    elevation: 20,
+  },
+  color: {
+    color: "white",
+  },
+  color1: {
+    color: "black",
   },
 });
 

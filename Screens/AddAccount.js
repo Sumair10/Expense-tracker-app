@@ -1,16 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, Text, StyleSheet, Button, TextInput } from "react-native";
 import Headers from "../Components/Headers";
 import NavigationStrings from "../Constants/NavigationStrings";
 import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
+import useFetch from "../Components/useFetch";
 
 const AddAccount = () => {
+  const [accountName, setAccountName] = useState("");
+  const [cash, setCash] = useState("");
   const navigation = useNavigation();
 
-  const goToHome = () => {
-    navigation.navigate(NavigationStrings.HOME);
+  //   const goToHome = () => {
+  //     navigation.navigate(NavigationStrings.HOME);
+  //   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const addAccount = { accountName, cash };
+
+    fetch("http://192.168.18.38:3000/account", {
+      method: "POST",
+      headers: { "content-Type": " application/json" },
+      body: JSON.stringify(addAccount),
+    }).then(() => {
+      console.log("data added successful");
+      navigation.navigate(NavigationStrings.HOME);
+    });
   };
 
   return (
@@ -23,26 +40,23 @@ const AddAccount = () => {
           <TextInput
             placeholder="Enter Account Name"
             style={styles.input}
-            //   onChangeText={goalInputHandler}
-            //   value={textEntered}
+            value={accountName}
+            onChangeText={(accountName) => setAccountName(accountName)}
           ></TextInput>
         </View>
-        <Text style={{ fontSize: 20 }}>Account Number</Text>
-        <View style={styles.inputFiels}>
-          <TextInput
-            placeholder="Enter Account Number"
-            style={styles.input}
-            //   onChangeText={goalInputHandler}
-            //   value={textEntered}
-          ></TextInput>
-        </View>
+
         <Text style={{ fontSize: 20 }}>Cash</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Cash"
             style={styles.input}
-            //   onChangeText={goalInputHandler}
-            //   value={textEntered}
+            onChangeText={(cash) => setCash(cash)}
+            value={cash}
+            blurOnSubmit
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="numeric"
+            maxLength={5}
           ></TextInput>
         </View>
 
@@ -50,7 +64,8 @@ const AddAccount = () => {
           <Button
             title="Add Account"
             color={Colors.primary}
-            onPress={goToHome}
+            // onPress={goToHome}
+            onPress={handleSubmit}
           />
         </View>
       </View>

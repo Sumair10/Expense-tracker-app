@@ -1,13 +1,25 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, Text, StyleSheet, Button } from "react-native";
 import Headers from "../Components/Headers";
 import NavigationStrings from "../Constants/NavigationStrings";
 import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
+import useFetch from "../Components/useFetch";
+import date from "../Constants/date";
 
 const AllTransactions = () => {
   const navigation = useNavigation();
+  var dates = date.myDate;
+  const [transactions, setTransactions] = useState([]);
+  const { data: allTransactions } = useFetch(
+    "http://192.168.18.38:3000/expense"
+  );
+
+  useEffect(() => {
+    setTransactions(allTransactions);
+    console.log(allTransactions);
+  }, [allTransactions, transactions]);
 
   return (
     <View>
@@ -15,39 +27,29 @@ const AllTransactions = () => {
 
       <View style={styles.head}>
         <Text style={{ fontSize: 26, fontWeight: "bold" }}>Transactions</Text>
-        <Text style={{ color: "gray", fontSize: 12 }}>PKR 0</Text>
       </View>
       <View style={styles.mainTran}>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
+        {transactions &&
+          transactions.map((transaction) => (
+            <Card style={{ width: "80%", margin: 2 }}>
+              <View style={styles.transactions}>
+                <Text style={{ fontSize: 15 }}>
+                  {transaction.category || transaction.transaction}
+                </Text>
+                <Text style={{ color: Colors.primary }}>
+                  PKR {transaction.cash}
+                </Text>
+              </View>
+              <View style={styles.transactions}>
+                <Text style={{ fontSize: 12, color: "gray" }}>
+                  {transaction.account}
+                </Text>
+                <Text style={{ fontSize: 10, color: "gray" }}>
+                  {transaction.date}
+                </Text>
+              </View>
+            </Card>
+          ))}
       </View>
     </View>
   );

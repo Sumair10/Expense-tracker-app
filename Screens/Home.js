@@ -1,11 +1,35 @@
 import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 import Headers from "../Components/Headers";
 import NavigationStrings from "../Constants/NavigationStrings";
 import Card from "../Components/Card";
 import Colors from "../Constants/Colors";
+import useFetch from "../Components/useFetch";
+
 const Home = () => {
+  const [accounts, setAccounts] = useState([]);
+
+  const { data: allAccounts } = useFetch("http://192.168.18.38:3000/account");
+  useEffect(() => {
+    setAccounts(allAccounts);
+    console.log(allAccounts);
+  }, [allAccounts, accounts]);
+
+  const [transactions, setTransactions] = useState([]);
+  const { data: allTransactions } = useFetch(
+    "http://192.168.18.38:3000/expense"
+  );
+
+  useEffect(() => {
+    setTransactions(allTransactions);
+    console.log(allTransactions);
+  }, [allTransactions, transactions]);
+
+  let sum = 0;
+  accounts && accounts.map((account) => (sum = parseInt(account.cash) + sum));
+  console.log(sum);
+
   const navigation = useNavigation();
 
   const goToAllAccounts = () => {
@@ -42,33 +66,20 @@ const Home = () => {
             </Text>
           </View>
           <View style={styles.number}>
-            <Text style={styles.color}>PKR 20,000</Text>
+            <Text style={styles.color}>PKR {sum}</Text>
           </View>
+
           <View style={styles.list}>
-            <Card style={styles.cardMargin}>
-              <Text style={styles.accounts}>Cash</Text>
-              <Text style={{ color: Colors.primary, fontSize: 12 }}>
-                PKR 4000
-              </Text>
-            </Card>
-            <Card style={styles.cardMargin}>
-              <Text>Meezan Bank</Text>
-              <Text style={{ color: Colors.primary, fontSize: 12 }}>
-                PKR 10,000
-              </Text>
-            </Card>
-            <Card style={styles.cardMargin}>
-              <Text>SadaPay</Text>
-              <Text style={{ color: Colors.primary, fontSize: 12 }}>
-                PKR 1000
-              </Text>
-            </Card>
-            <Card style={styles.cardMargin}>
-              <Text>Jaaz Cash</Text>
-              <Text style={{ color: Colors.primary, fontSize: 12 }}>
-                PKR 4000
-              </Text>
-            </Card>
+            {accounts &&
+              accounts.slice(0, 4).map((account) => (
+                <Card style={styles.cardMargin}>
+                  <Text>{account.accountName}</Text>
+                  <Text style={{ color: Colors.primary, fontSize: 12 }}>
+                    PKR {account.cash}
+                  </Text>
+                </Card>
+              ))}
+
             <Card style={styles.cardMargin}>
               <View
                 style={{
@@ -103,36 +114,28 @@ const Home = () => {
         </Text>
       </View>
       <View style={styles.mainTran}>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
-        <Card style={{ width: "80%", margin: 2 }}>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 15 }}>Salary</Text>
-            <Text style={{ color: Colors.primary }}>PKR 1500</Text>
-          </View>
-          <View style={styles.transactions}>
-            <Text style={{ fontSize: 12, color: "gray" }}>Meezan Bank</Text>
-            <Text style={{ fontSize: 10, color: "gray" }}>24 Dec, Fri</Text>
-          </View>
-        </Card>
+        {transactions &&
+          transactions.slice(0, 4).map((transaction) => (
+            <Card style={{ width: "80%", margin: 2 }}>
+              <View style={styles.transactions}>
+                <Text style={{ fontSize: 15 }}>
+                  {transaction.category || transaction.transaction}
+                </Text>
+                <Text style={{ color: Colors.primary }}>
+                  PKR {transaction.cash}
+                </Text>
+              </View>
+              <View style={styles.transactions}>
+                <Text style={{ fontSize: 12, color: "gray" }}>
+                  {transaction.account}
+                </Text>
+                <Text style={{ fontSize: 10, color: "gray" }}>
+                  {transaction.date}
+                </Text>
+              </View>
+            </Card>
+          ))}
+
         <Card style={styles.cardMargin}>
           <View
             style={{

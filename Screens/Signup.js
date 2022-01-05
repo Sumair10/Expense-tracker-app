@@ -1,11 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Button, TextInput } from "react-native";
 import Headers from "../Components/Headers";
 import Colors from "../Constants/Colors";
 import NavigationStrings from "../Constants/NavigationStrings";
 
 const Signup = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const navigation = useNavigation();
 
   const goToSignin = () => {
@@ -19,7 +22,7 @@ const Signup = () => {
     <View>
       <Headers title="Signup" />
       <View style={styles.inputContainer}>
-        <Text>User Name</Text>
+        <Text style={{ fontSize: 20 }}>User Name</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter User Name"
@@ -28,7 +31,7 @@ const Signup = () => {
             //   value={textEntered}
           ></TextInput>
         </View>
-        <Text>Email</Text>
+        <Text style={{ fontSize: 20 }}>Email</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Email"
@@ -37,7 +40,7 @@ const Signup = () => {
             //   value={textEntered}
           ></TextInput>
         </View>
-        <Text>Password</Text>
+        <Text style={{ fontSize: 20 }}>Password</Text>
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Password"

@@ -64,9 +64,6 @@ const AddTransaction = () => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    height: 100,
-  },
   data: {
     flexDirection: "row",
     justifyContent: "space-around",
