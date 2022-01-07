@@ -5,6 +5,7 @@ import Headers from "../Components/Headers";
 import Colors from "../Constants/Colors";
 import NavigationStrings from "../Constants/NavigationStrings";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ip from "../Constants/ip";
 
 const Signin = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +18,8 @@ const Signin = () => {
 
   const storeData = async (value) => {
     try {
-      await AsyncStorage.setItem("@userData", value);
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem("@userData", jsonValue);
     } catch (e) {
       // saving error
     }
@@ -30,16 +32,20 @@ const Signin = () => {
       password: password.trim(),
     };
     console.log(signinBody);
-    fetch("http://192.168.18.38:3000/auth/signin", {
+    fetch(`${ip.ip}/auth/signin`, {
       method: "POST",
       headers: { "content-Type": " application/json" },
       body: JSON.stringify(signinBody),
     })
       .then((res) => res.json())
       .then((res) => {
-        storeData(res);
-        console.log(res);
-        navigation.navigate(NavigationStrings.HOME);
+        storeData(res.result.userExist);
+        console.log("email :::::: ", res.result.statusCode);
+        if (res.result.statusCode === 200) {
+          navigation.navigate(NavigationStrings.HOME);
+        } else {
+          return;
+        }
       });
   };
 
@@ -60,6 +66,7 @@ const Signin = () => {
         <View style={styles.inputFiels}>
           <TextInput
             placeholder="Enter Password"
+            secureTextEntry={true}
             style={styles.input}
             value={password}
             onChangeText={(password) => setPassword(password)}

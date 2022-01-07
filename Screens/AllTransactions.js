@@ -7,20 +7,30 @@ import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
 import useFetch from "../Components/useFetch";
 import date from "../Constants/date";
+import ip from "../Constants/ip";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AllTransactions = () => {
   const navigation = useNavigation();
   var dates = date.myDate;
   const [transactions, setTransactions] = useState([]);
-  const { data: allTransactions } = useFetch(
-    "http://192.168.18.38:3000/expense"
-  );
+  const { data: allTransactions } = useFetch(`${ip.ip}/expense`);
+  const [id, setId] = useState("");
 
   useEffect(() => {
     setTransactions(allTransactions);
     console.log(allTransactions);
   }, [allTransactions, transactions]);
-
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@userData");
+      jsonValue != null ? JSON.parse(jsonValue) : null;
+      setId(JSON.parse(jsonValue)._id);
+    } catch (e) {
+      // error reading value
+    }
+  };
+  getData();
   return (
     <View>
       <Headers title="History" />
@@ -30,26 +40,28 @@ const AllTransactions = () => {
       </View>
       <View style={styles.mainTran}>
         {transactions &&
-          transactions.map((transaction) => (
-            <Card style={{ width: "80%", margin: 2 }}>
-              <View style={styles.transactions}>
-                <Text style={{ fontSize: 15 }}>
-                  {transaction.category || transaction.transaction}
-                </Text>
-                <Text style={{ color: Colors.primary }}>
-                  PKR {transaction.cash}
-                </Text>
-              </View>
-              <View style={styles.transactions}>
-                <Text style={{ fontSize: 12, color: "gray" }}>
-                  {transaction.account}
-                </Text>
-                <Text style={{ fontSize: 10, color: "gray" }}>
-                  {transaction.date}
-                </Text>
-              </View>
-            </Card>
-          ))}
+          transactions.map((transaction) =>
+            transaction.signedInUserID === id ? (
+              <Card style={{ width: "80%", margin: 2 }}>
+                <View style={styles.transactions}>
+                  <Text style={{ fontSize: 15 }}>
+                    {transaction.category || transaction.transaction}
+                  </Text>
+                  <Text style={{ color: Colors.primary }}>
+                    PKR {transaction.cash}
+                  </Text>
+                </View>
+                <View style={styles.transactions}>
+                  <Text style={{ fontSize: 12, color: "gray" }}>
+                    {transaction.account}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: "gray" }}>
+                    {transaction.date}
+                  </Text>
+                </View>
+              </Card>
+            ) : null
+          )}
       </View>
     </View>
   );

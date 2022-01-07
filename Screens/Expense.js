@@ -15,12 +15,14 @@ import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
 import useFetch from "../Components/useFetch";
 import date from "../Constants/date";
+import ip from "../Constants/ip";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Expense = () => {
   //     let today = new Date().toLocaleDateString();
   //   console.log("date : ", today);
-  const [selectedAccountIndex, setSelectedAccountIndex] = useState(0);
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState("");
+  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState("");
 
   const [account, setAccount] = useState("");
   const [category, setCategory] = useState("");
@@ -29,7 +31,7 @@ const Expense = () => {
 
   const [accountCash, setAccountCash] = useState("");
   const [cash1, setCash1] = useState("");
-
+  const [id, setId] = useState("");
   console.log("accountIndex : ", selectedAccountIndex);
   console.log("account : ", account);
   console.log("categoryIndex : ", selectedCategoryIndex);
@@ -38,7 +40,7 @@ const Expense = () => {
   console.log("account cash : ", accountCash);
 
   const [accounts, setAccounts] = useState([]);
-  const { data: allAccounts } = useFetch("http://192.168.18.38:3000/account");
+  const { data: allAccounts } = useFetch(`${ip.ip}/account`);
   const categories = [
     "Home",
     "Committee",
@@ -54,6 +56,16 @@ const Expense = () => {
     console.log(allAccounts);
   }, [allAccounts, accounts]);
 
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@userData");
+      jsonValue != null ? JSON.parse(jsonValue) : null;
+      setId(JSON.parse(jsonValue)._id);
+    } catch (e) {
+      // error reading value
+    }
+  };
+  getData();
   const navigation = useNavigation();
 
   const goToAddAccount = () => {
@@ -70,6 +82,7 @@ const Expense = () => {
     const cash = accountCash - cash1;
     console.log("updated cash :: ", cash);
     const addAccount = {
+      signedInUserID: id,
       cash: `-${cash1}`,
       category,
       account,
@@ -78,7 +91,7 @@ const Expense = () => {
     };
     const updateAccount = { cash };
 
-    fetch("http://192.168.18.38:3000/account/" + accountID, {
+    fetch(`${ip.ip}/account/` + accountID, {
       method: "PATCH",
       headers: { "content-Type": " application/json" },
       body: JSON.stringify(updateAccount),
@@ -86,7 +99,7 @@ const Expense = () => {
       console.log("data edit successful");
     });
 
-    fetch("http://192.168.18.38:3000/expense", {
+    fetch(`${ip.ip}/expense`, {
       method: "POST",
       headers: { "content-Type": " application/json" },
       body: JSON.stringify(addAccount),
@@ -146,44 +159,46 @@ const Expense = () => {
       </View>
       <View style={styles.list}>
         {accounts &&
-          accounts.map((account, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => {
-                setSelectedAccountIndex(index),
-                  setAccount(account.accountName),
-                  setAccountID(account._id),
-                  setAccountCash(account.cash);
-              }}
-            >
-              <Card
-                style={
-                  selectedAccountIndex === index
-                    ? styles.cardMargin1
-                    : styles.cardMargin
-                }
+          accounts.map((account, index) =>
+            account.signedInUserID === id ? (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedAccountIndex(index),
+                    setAccount(account.accountName),
+                    setAccountID(account._id),
+                    setAccountCash(account.cash);
+                }}
               >
-                <Text
+                <Card
                   style={
                     selectedAccountIndex === index
-                      ? styles.color
-                      : styles.color1
+                      ? styles.cardMargin1
+                      : styles.cardMargin
                   }
                 >
-                  {account.accountName}
-                </Text>
-              </Card>
-            </TouchableOpacity>
-          ))}
+                  <Text
+                    style={
+                      selectedAccountIndex === index
+                        ? styles.color
+                        : styles.color1
+                    }
+                  >
+                    {account.accountName}
+                  </Text>
+                </Card>
+              </TouchableOpacity>
+            ) : null
+          )}
 
-        <Card style={styles.cardMargin}>
+        {/* <Card style={styles.cardMargin}>
           <Text
             style={{ fontSize: 20, color: Colors.primary }}
             onPress={goToAddAccount}
           >
             +
           </Text>
-        </Card>
+        </Card> */}
       </View>
 
       <View style={styles.inputFiels1}>

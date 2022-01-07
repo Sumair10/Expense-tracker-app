@@ -1,33 +1,62 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { View, Text, StyleSheet, Button, TouchableOpacity } from "react-native";
 import Headers from "../Components/Headers";
 import NavigationStrings from "../Constants/NavigationStrings";
 import Card from "../Components/Card";
 import Colors from "../Constants/Colors";
 import useFetch from "../Components/useFetch";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ip from "../Constants/ip";
 
 const Home = () => {
   const [accounts, setAccounts] = useState([]);
-
-  const { data: allAccounts } = useFetch("http://192.168.18.38:3000/account");
+  const [id, setId] = useState("");
+  const { data: allAccounts } = useFetch(`${ip.ip}/account`);
   useEffect(() => {
     setAccounts(allAccounts);
-    console.log(allAccounts);
+    // console.log(allAccounts);
   }, [allAccounts, accounts]);
+  console.log("this is signup is :::::::::::::: ", id);
+
+  // const getData = async () => {
+  //   try {
+  //     const value = await AsyncStorage.getItem("@userData");
+  //     if (value !== null) {
+  //       console.log("newwwwww =======", value);
+  //     }
+  //   } catch (e) {
+  //     // error reading value
+  //   }
+  // };
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@userData");
+      jsonValue != null ? JSON.parse(jsonValue) : null;
+      console.log(jsonValue);
+      // setId(JSON.parse(jsonValue).result.userExist._id);
+      setId(JSON.parse(jsonValue)._id);
+    } catch (e) {
+      // error reading value
+    }
+  };
+  getData();
 
   const [transactions, setTransactions] = useState([]);
-  const { data: allTransactions } = useFetch(
-    "http://192.168.18.38:3000/expense"
-  );
+  const { data: allTransactions } = useFetch(`${ip.ip}/expense`);
 
   useEffect(() => {
     setTransactions(allTransactions);
-    console.log(allTransactions);
+    // console.log(allTransactions);
   }, [allTransactions, transactions]);
 
   let sum = 0;
-  accounts && accounts.map((account) => (sum = parseInt(account.cash) + sum));
+  accounts &&
+    accounts.map((account) =>
+      account.signedInUserID === id
+        ? (sum = parseInt(account.cash) + sum)
+        : null
+    );
   console.log(sum);
 
   const navigation = useNavigation();
@@ -71,35 +100,39 @@ const Home = () => {
 
           <View style={styles.list}>
             {accounts &&
-              accounts.slice(0, 4).map((account) => (
-                <Card style={styles.cardMargin}>
-                  <Text>{account.accountName}</Text>
-                  <Text style={{ color: Colors.primary, fontSize: 12 }}>
-                    PKR {account.cash}
-                  </Text>
-                </Card>
-              ))}
-
-            <Card style={styles.cardMargin}>
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: 30,
-                }}
-              >
-                <Text
+              accounts.map((account) =>
+                account.signedInUserID === id ? (
+                  <Card style={styles.cardMargin}>
+                    <Text>{account.accountName}</Text>
+                    <Text style={{ color: Colors.primary, fontSize: 12 }}>
+                      PKR {account.cash}
+                    </Text>
+                  </Card>
+                ) : null
+              )}
+            <TouchableOpacity onPress={goToAddAccount}>
+              <Card style={styles.cardMargin}>
+                <View
                   style={{
-                    fontSize: 20,
-                    // width: 30,
-                    color: Colors.primary,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 30,
                   }}
-                  onPress={goToAddAccount}
                 >
-                  +
-                </Text>
-              </View>
-            </Card>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      // width: 30,
+                      color: Colors.primary,
+                    }}
+
+                    // onPress={getData}
+                  >
+                    +
+                  </Text>
+                </View>
+              </Card>
+            </TouchableOpacity>
           </View>
         </Card>
       </View>
@@ -115,47 +148,49 @@ const Home = () => {
       </View>
       <View style={styles.mainTran}>
         {transactions &&
-          transactions.slice(0, 4).map((transaction) => (
-            <Card style={{ width: "80%", margin: 2 }}>
-              <View style={styles.transactions}>
-                <Text style={{ fontSize: 15 }}>
-                  {transaction.category || transaction.transaction}
-                </Text>
-                <Text style={{ color: Colors.primary }}>
-                  PKR {transaction.cash}
-                </Text>
-              </View>
-              <View style={styles.transactions}>
-                <Text style={{ fontSize: 12, color: "gray" }}>
-                  {transaction.account}
-                </Text>
-                <Text style={{ fontSize: 10, color: "gray" }}>
-                  {transaction.date}
-                </Text>
-              </View>
-            </Card>
-          ))}
-
-        <Card style={styles.cardMargin}>
-          <View
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              width: 30,
-            }}
-          >
-            <Text
+          transactions.map((transaction) =>
+            transaction.signedInUserID === id ? (
+              <Card style={{ width: "80%", margin: 2 }}>
+                <View style={styles.transactions}>
+                  <Text style={{ fontSize: 15 }}>
+                    {transaction.category || transaction.transaction}
+                  </Text>
+                  <Text style={{ color: Colors.primary }}>
+                    PKR {transaction.cash}
+                  </Text>
+                </View>
+                <View style={styles.transactions}>
+                  <Text style={{ fontSize: 12, color: "gray" }}>
+                    {transaction.account}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: "gray" }}>
+                    {transaction.date}
+                  </Text>
+                </View>
+              </Card>
+            ) : null
+          )}
+        <TouchableOpacity onPress={goToAddTransactions}>
+          <Card style={styles.cardMargin}>
+            <View
               style={{
-                fontSize: 20,
-                // width: 30,
-                color: Colors.primary,
+                justifyContent: "center",
+                alignItems: "center",
+                width: 30,
               }}
-              onPress={goToAddTransactions}
             >
-              +
-            </Text>
-          </View>
-        </Card>
+              <Text
+                style={{
+                  fontSize: 20,
+                  // width: 30,
+                  color: Colors.primary,
+                }}
+              >
+                +
+              </Text>
+            </View>
+          </Card>
+        </TouchableOpacity>
       </View>
     </View>
   );

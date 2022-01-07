@@ -6,21 +6,30 @@ import NavigationStrings from "../Constants/NavigationStrings";
 import Colors from "../Constants/Colors";
 import Card from "../Components/Card";
 import useFetch from "../Components/useFetch";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ip from "../Constants/ip";
 const AddAccount = () => {
   const [accountName, setAccountName] = useState("");
   const [cash, setCash] = useState("");
   const navigation = useNavigation();
+  const [id, setId] = useState("");
 
-  //   const goToHome = () => {
-  //     navigation.navigate(NavigationStrings.HOME);
-  //   };
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@userData");
+      jsonValue != null ? JSON.parse(jsonValue) : null;
+      setId(JSON.parse(jsonValue)._id);
+    } catch (e) {
+      // error reading value
+    }
+  };
+  getData();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const addAccount = { accountName, cash };
+    const addAccount = { signedInUserID: id, accountName, cash };
 
-    fetch("http://192.168.18.38:3000/account", {
+    fetch(`${ip.ip}/account`, {
       method: "POST",
       headers: { "content-Type": " application/json" },
       body: JSON.stringify(addAccount),
@@ -64,7 +73,6 @@ const AddAccount = () => {
           <Button
             title="Add Account"
             color={Colors.primary}
-            // onPress={goToHome}
             onPress={handleSubmit}
           />
         </View>
